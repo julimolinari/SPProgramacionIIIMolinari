@@ -7,7 +7,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 use \Firebase\JWT\JWT;
 
-//  use Utils\Auth as auth;
 
 
 use App\Models\Usuario;
@@ -25,51 +24,36 @@ class UserController{
         return $response;
      }
 
-     public function addOne(Request $request, Response $response, $args)
-     {
-         
-        $user = new Usuario;
-
-        $body = $request->getParsedBody();
-
-        
-        $user->email = $body['email'];
-        $user->tipo = $body['tipo'];
-        $user->clave = $body['clave'];
-        
-        $rta = $user->save();
-    
-        $response->getBody()->write(json_encode($rta));
-        
-         return $response;
-      }
+   
 
       public function add(Request $request, Response $response, $args)
     {
         $user = new Usuario;
-        //$body = json_decode($response->getBody()->getContents())[0];
-        //$body = json_decode($request->getBody());
+        
         $body = $request->getParsedBody();
 
         $clave= [
             $salt = "progra3"
         ];
 
-        $user->usuario=$body['usuario'];
+        
         $user->email = $body['email'];
         $user->tipo = $body['tipo'];
+        $user->nombre = $body['nombre'];
         $user->clave = password_hash($body['clave'], PASSWORD_DEFAULT, $clave);
         
         $rta=400;
         $resCode = 500;
 
-        if(!$this->emailExists($user->email) && $this->checkPassword($user->clave)) {
+        if(!$this->emailExists($user->email) && $this->checkPassword($user->clave) &&
+        !$this->checkName($user->nombre)) {
             
                 $rta = json_encode(array("message" => $user->save()));
                 $resCode = 201;
+                var_dump("Se registró el usuario con exito.");
         }
         else {
-            $rta = json_encode(array("message" => "Tiene datos erroneos."));
+            $rta = json_encode(array("message" => "Tiene datos erroneos o ya esta registrado."));
             $resCode = 400;
         }
         $response->getBody()->write($rta);
@@ -77,15 +61,7 @@ class UserController{
         return $response->withStatus($resCode);
     }
 
-     public function getOne(Request $request, Response $response, $args) {
-
-      
-        $rta = Usuario::find($args['legajo']);
-       
-        $response->getBody()->write(json_encode(($rta)));
-
-        return $response;
-     }
+    
 
      public function updateOne(Request $request, Response $response, $args) {
         
@@ -94,14 +70,11 @@ class UserController{
 
         $body = $request->getParsedBody();
 
-        $clave= [
-            $salt = "progra3"
-        ];
-
+        
         $user->usuario=$body['usuario'];
         $user->email = $body['email'];
         $user->tipo = $body['tipo'];
-        $user->clave = password_hash($body['clave'], PASSWORD_DEFAULT, $clave);
+        $user->clave = $body['clave'];
                 
         $rta = $user->save();
     
@@ -110,16 +83,7 @@ class UserController{
          return $response;
      }
 
-     public function deleteOne(Request $request, Response $response, $args) {
-        
-        $user = Usuario::find(7);
-                
-        $rta = $user->delete();
-    
-        $response->getBody()->write(json_encode($user));
-        
-         return $response;
-     }
+   
 
      public function login(Request $request, Response $response, $args) 
     {
@@ -128,32 +92,37 @@ class UserController{
         $login = new Usuario;
         
         
-        $login->usuario = $body['usuario'];
-        $login->legajo = $body['legajo'];
+
+        $login->email = $body['email'];
+        $login->clave = $body['clave'];        
         
+
+        $user = Usuario::where('email', '=', $login->email)->first();
         
-        $user = Usuario::where('usuario', '=', $login->usuario)->first();
+        $isValidPass = password_verify($login->clave, $user->clave);
         
         $rta="";       
         $resCode = 500;
 
-        if($user != null && $user->legajo == $login->legajo)
+
+        if($user != null &&  !$isValidPass)
         {
             $key = "sp";
             $payload = array(
-                "usuario" => $user->usuario,
-                "legajo" => $user->legajo,
+                "nombre" => $user->nombre,
+                "clave" => $user->clave,
                 "tipo" => $user->tipo,
+                "legajo" =>$user->legajo
                 
                 
             );
         
             $jwt = JWT::encode($payload, $key);
-            $rta = json_encode(array("message" => "Bienvenido $login->usuario", "token" => $jwt));
+            $rta = json_encode(array("message" => "Bienvenido $login->email", "token" => $jwt));
             $resCode = 200;
         }
         else {
-            $rta = json_encode(array("message" => "Usuario o legajo erronea."));
+            $rta = json_encode(array("message" => "Email o Clave erroneo."));
             $resCode = 400;
         }
         

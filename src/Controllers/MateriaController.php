@@ -25,7 +25,7 @@ class MateriaController{
 
         
         
-        $materia->nombre = $body['nombre'];
+        $materia->materia = $body['materia'];
         $materia->cuatrimestre = $body['cuatrimestre'];
         $materia->cupos = $body['cupos'];
         
@@ -54,6 +54,7 @@ class MateriaController{
 
         $key = "sp";
 
+        $rta = Materia::find($args['idMateria']);
 
         $decoded = JWT::decode($token, $key, array('HS256'));
 
@@ -61,25 +62,21 @@ class MateriaController{
         switch ($decoded->tipo) {
             case 'alumno':
                 
-                $rta = AlumnoMateriaController::getAlumnoMaterias($decoded->legajo);
-                $response->getBody()->write(json_encode(($rta)));
+                $response = "Debe ser Admin o Profesor";
                 return $response;
 
                 break;
 
             case 'profesor':
-                $rta = ProfesorMateriaController::getProfesorMaterias($decoded->legajo);
+                $rta = AlumnoMateriaController::getAlumnoMaterias($rta->idMateria);
                 $response->getBody()->write(json_encode(($rta)));
                 return $response;
                 break;
 
             case 'admin':
-                $rta = AlumnoMateriaController::getAlumnoMaterias($decoded->legajo);
+                $rta =AlumnoMateriaController::getAlumnoMaterias($rta->idMateria);
                 $response->getBody()->write(json_encode(($rta)));
-                $rtaAlumno = $response;
-                $rta = ProfesorMateriaController::getProfesorMaterias($decoded->legajo);
-                $response->getBody()->write(json_encode(($rta)));
-                return $rtaAlumno + $response;
+                return $response;
                 break;
             
             
@@ -87,6 +84,15 @@ class MateriaController{
         
 
     }
+
+    public function getAll(Request $request, Response $response, $args)
+    {
+        
+        $rta = Materia::get();
+        
+        $response->getBody()->write(json_encode(($rta)));
+        return $response;
+     }
 
 
 

@@ -19,7 +19,6 @@ class AlumnoMateriaController
     public function inscripcion(Request $request, Response $response, $args)
     {
 
-
         $materia = Materia::find($args['idMateria']);
 
         $token = $request->getHeader("token")[0];
@@ -28,14 +27,14 @@ class AlumnoMateriaController
 
 
         $decoded = JWT::decode($token, $key, array('HS256'));
-
+        
         if ($materia->cupos > 0) {
 
             $alumnoMateria = new AlumnoMateria;
 
             $alumnoMateria->legajo = $decoded->legajo;
             $alumnoMateria->idMateria = $materia->idMateria;
-            print "Se Inscribió el alumno: " . $decoded->usuario . " a la materia: " . $materia->nombre;
+            print "Se Inscribió el alumno: " . $decoded->nombre . " a la materia: " . $materia->materia;
 
 
             $rta = $alumnoMateria->save();
@@ -50,13 +49,13 @@ class AlumnoMateriaController
     }
 
 
-    public static function getAlumnoMaterias($legajo){
+    public static function getAlumnoMaterias($idMateria){
 
-        $alumnoMateria = AlumnoMateria::select('usuario','nombre')
+        $alumnoMateria = AlumnoMateria::select('nombre','email')
     
         ->join('materias','materias.idMateria','=','alumnomateria.idMateria')
         ->join('usuarios','usuarios.legajo','=','alumnomateria.legajo')
-        ->where('alumnomateria.legajo',$legajo)
+        ->where('alumnomateria.idMateria',$idMateria)
         ->get();
         
         return $alumnoMateria;

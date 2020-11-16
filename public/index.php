@@ -7,6 +7,7 @@ use Slim\Routing\RouteCollectorProxy;
 use App\Controllers\UserController;
 use App\Controllers\MateriaController;
 use App\Controllers\AlumnoMateriaController;
+use App\Controllers\NotasController;
 
 use App\Middlewares\JsonMiddleware;
 use App\Middlewares\AuthMiddleware;
@@ -25,26 +26,22 @@ $app->group('/users', function (RouteCollectorProxy $group) {
 
    $group->get('[/]',UserController::class.":getAll");
 
-   // $group->post('[/]',UserController::class.":addOne");
+   
    $group->post('[/]',UserController::class.":add");
 
    $group->post('/login',UserController::class.":login");
 
-   $group->get('/{legajo}',UserController::class.":getOne");
-
-   $group->post('/{legajo}',UserController::class.":updateOne");
-
-   $group->delete('/{id}',UserController::class.":deleteOne");
+   
     
 
 })->add(new JsonMiddleware);
 
 
-$app->group('/materias', function (RouteCollectorProxy $group) {
+$app->group('/materia', function (RouteCollectorProxy $group) {
 
    
    $group->post('[/]',MateriaController::class.":add")->add(new AuthMiddleware);
-   $group->get('[/]',MateriaController::class.":getMaterias");   
+   $group->get('[/]',MateriaController::class.":getAll");   
   
     
 
@@ -55,10 +52,22 @@ $app->group('/inscripcion', function (RouteCollectorProxy $group) {
 
    
    $group->post('/{idMateria}',AlumnoMateriaController::class.":inscripcion")->add(new AlumnoMiddleware);
-  
-    
+   $group->get('/{idMateria}',MateriaController::class.":getMaterias");
 
 })->add(new JsonMiddleware);
-//MIDDELWARE
+
+
+
+$app->group('/notas', function (RouteCollectorProxy $group) {
+
+   
+   $group->put('/{idMateria}',NotasController::class.":asignarNota");
+   $group->get('/{idMateria}',NotasController::class.":getNotas");
+      
+
+})->add(new JsonMiddleware);
+
   
+
+
 $app->run();
